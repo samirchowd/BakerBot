@@ -11,7 +11,7 @@ banStart = (dt.datetime.now().hour, dt.datetime.now().minute)
 banEnd = (dt.datetime.now().hour, dt.datetime.now().minute)
 
 # Initiating affected member list
-memebers = []
+members = []
 
 @client.event
 async def on_ready():
@@ -27,10 +27,53 @@ async def setStart(ctx, *, time):
 async def setEnd(ctx, *, time):
     time = dt.datetime.strptime(time, '%H:%M')
     banEnd = (time.hour, time.minute)
-    await ctx.send(f'Ban wave will now start at {banEnd[0]}:{banEnd[1]}')
+    await ctx.send(f'Ban wave will now end at {banEnd[0]}:{banEnd[1]}')
+
+@client.command()
+async def banUsers(ctx):
+    for member in members:
+        try: 
+            await ctx.guild.ban(member)
+            await ctx.send(f"Removed {member} until {banEnd[0]}:{banEnd[1]}")
+        except: 
+            await ctx.send(f"Failed to remove {member}")
 
 
 
+@client.command()
+async def unbanUsers(ctx):
+    #TODO: Unban all the members in the members list 
+    for member in members:
+        await ctx.guild.unban(member)
+        await ctx.invoke(client.get_command('inviteUser'), user=member)
+        await ctx.send(f"Invited {member} until {banStart[0]}:{banStart[1]}")
+        
+
+@client.command()
+async def addUser(ctx, *, user:discord.Member):
+    members.append(user)
+    await ctx.send(f'Added user {user}')
+
+@client.command()
+async def removeUser(ctx, *, user:discord.Member):
+    members.remove(user)
+    await ctx.send(f'Removed user {user}')
+
+@client.command()
+async def getUsers(ctx):
+    for member in members:
+        await ctx.send(member.name)
+
+@client.command()
+async def inviteUser(ctx, *, user: discord.Member):
+    #TODO: Invite user to the server (guild)
+    link = await ctx.channel.create_invite(max_age = 60) # make this max_use = 1
+    await user.send(str(link))
+
+@client.command()
+async def clear(ctx):
+    await ctx.channel.purge()
+    await ctx.send("Deleted last 100 messages")
 
 if __name__ == '__main__':
     client.run(token)
